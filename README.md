@@ -18,7 +18,7 @@ The **Order & Inventory Service** simulates a real-world e-commerce backend flow
 
 - **Runtime & Language:** Node.js, TypeScript
 - **Backend Framework:** [NestJS](https://nestjs.com/)
-- **Database:** [PostgreSQL 16](https://www.postgresql.org/) (Alpine)
+- **Database:** [PostgreSQL 17 / 16](https://www.postgresql.org/) (Alpine)
 - **Database Management:** [pgAdmin 4](https://www.pgadmin.org/)
 - **DevOps & Containerization:** Docker, Docker Compose
 
@@ -31,7 +31,10 @@ The application is structured into decoupled domain modules:
 ```
 order-inventory-service/
 ├── .agents/                # Agent configurations & guidelines
-├── order-service/          # NestJS application core
+├── docs/                   # Educational tasks & theoretical interview answers
+│   ├── task.md             # Project requirements & tasks
+│   └── interview_answers.md# Detailed answers for self-check & interview prep
+├── server/                 # NestJS application core (order-service)
 │   ├── src/
 │   │   ├── inventory/      # Inventory module (stock management, reservation logic)
 │   │   ├── orders/         # Orders module (order creation, checkout orchestration)
@@ -71,7 +74,7 @@ Configure your environment variables:
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_DB=order_inventory_db
-POSTGRES_PORT=5432
+POSTGRES_PORT=5433
 
 # pgAdmin Configuration
 PGADMIN_DEFAULT_EMAIL=admin@admin.com
@@ -87,15 +90,15 @@ Start PostgreSQL and pgAdmin using Docker Compose:
 docker compose up -d
 ```
 
-- **PostgreSQL**: Accessible on `localhost:5432`
+- **PostgreSQL**: Accessible on `localhost:5433` (or configured `POSTGRES_PORT`)
 - **pgAdmin**: Accessible on [http://localhost:8080](http://localhost:8080)
 
 ### 3. Run the NestJS Application
 
-Navigate to the `order-service` directory, install dependencies, and run in development mode:
+Navigate to the `server` directory, install dependencies, and run in development mode:
 
 ```bash
-cd order-service
+cd server
 npm install
 npm run start:dev
 ```
@@ -106,15 +109,15 @@ The API will be available at `http://localhost:3000`.
 
 ## 🗺 Implementation Roadmap
 
-- [ ] **Phase 1: Infrastructure**
-  - [ ] Configure `docker-compose.yml` with `postgres_db` and `pgadmin` services.
-  - [ ] Set up isolated Docker network (`order_network`) and persistence volumes.
-  - [ ] Configure PostgreSQL healthcheck with `pg_isready`.
+- [x] **Phase 1: Infrastructure**
+  - [x] Configure `docker-compose.yml` with `postgres_db` and `pgadmin` services.
+  - [x] Set up isolated Docker network (`order_network`) and persistence volumes.
+  - [x] Configure PostgreSQL healthcheck with `pg_isready`.
 
-- [ ] **Phase 2: NestJS Core & Dependency Injection**
-  - [ ] Initialize `order-service` project via `@nestjs/cli`.
-  - [ ] Implement `InventoryModule` with in-memory stock availability & reservation.
-  - [ ] Implement `OrdersModule` and inject `InventoryService` across modules.
+- [x] **Phase 2: NestJS Core & Dependency Injection**
+  - [x] Initialize `server` (order-service) project via `@nestjs/cli`.
+  - [x] Implement `InventoryModule` with in-memory stock availability & reservation.
+  - [x] Implement `OrdersModule` and inject `InventoryService` across modules.
 
 - [ ] **Phase 3: Persistence & Transactions (Upcoming)**
   - [ ] Integrate TypeORM or Prisma ORM.
@@ -124,7 +127,7 @@ The API will be available at `http://localhost:3000`.
 
 ## 📝 Learning Objectives & Self-Check
 
-As part of this educational project, focus on understanding:
+As part of this educational project, review the detailed answers in [docs/interview_answers.md](docs/interview_answers.md):
 1. Differences between `Record<K, T>` and index signatures (`{[key: string]: T}`) in TypeScript.
 2. How TypeScript utility types (`Partial`, `Pick`, `Omit`, `Required`) operate under the hood with generics.
 3. How Inversion of Control (IoC) and Dependency Injection (DI) are resolved by the NestJS IoC container.
