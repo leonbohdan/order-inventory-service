@@ -61,18 +61,3 @@
 2. Як працюють utility types `Pick`, `Omit`, `Partial`, `Required` на рівні TypeScript Generics (як би ти реалізував `MyPartial<T>`)?
 3. У чому різниця між Dependency Injection (DI) та Inversion of Control (IoC)? Як це реалізовано в контейнері NestJS?
 4. Навіщо у Docker Compose вказувати `healthcheck` для БД і як `condition: service_healthy` допомагає залежним сервісам?
-
-5. Реалізувати базовий in-memory склад (`InventoryService`):
-   - Створити типізований список товарів (id, title, quantity, price).
-   - Написати метод `checkAvailability(productId: string, quantity: number): boolean`.
-   - Написати метод `reserve(productId: string, quantity: number): boolean`.
-6. Створити модуль `Orders`, заінжектити `InventoryService` у `OrdersService` через експорт модуля `InventoryModule` (демонстрація DI).
-
----
-
-## 🎯 Питання для самоперевірки та інтерв'ю
-
-1. Чим `Record<K, T>` відрізняється від index signature `{[key: string]: T}`?
-2. Як працюють utility types `Pick`, `Omit`, `Partial`, `Required` на рівні TypeScript Generics (як би ти реалізував `MyPartial<T>`)?
-3. У чому різниця між Dependency Injection (DI) та Inversion of Control (IoC)? Як це реалізовано в контейнері NestJS?
-4. Навіщо у Docker Compose вказувати `healthcheck` для БД і як `condition: service_healthy` допомагає залежним сервісам?
