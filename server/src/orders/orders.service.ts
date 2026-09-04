@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InventoryService } from '../inventory/inventory.service.js';
 import { Order, ORDER_STATUS } from './interfaces/order.interface.js';
+import { CreateOrderDto } from './dto/create-order.dto.js';
 
 @Injectable()
 export class OrdersService {
@@ -8,24 +9,31 @@ export class OrdersService {
 
   constructor(private readonly inventoryService: InventoryService) {}
 
-  createOrder(productId: string, quantity: number): Order {
-    const isReserved = this.inventoryService.reserve(productId, quantity);
-
-    if (!isReserved) {
-      throw new BadRequestException(
-        `Product with ID ${productId} is out of stock or insufficient quantity.`,
+  createOrder(dto: CreateOrderDto): Order {
+    for (const item of dto.items) {
+      const isReserved = this.inventoryService.reserve(
+        item.productId,
+        item.quantity,
       );
+
+      if (!isReserved) {
+        throw new BadRequestException(
+          `Product with ID ${item.productId} is out of stock or insufficient quantity.`,
+        );
+      }
     }
 
     const newOrder: Order = {
       id: (this.orders.length + 1).toString(),
-      productId,
-      quantity,
+      items: dto.items,
+      deliveryAddress: dto.deliveryAddress,
+      paymentMethod: dto.paymentMethod,
       status: ORDER_STATUS.PENDING,
       createdAt: new Date(),
     };
 
     this.orders.push(newOrder);
+
     return newOrder;
   }
 
