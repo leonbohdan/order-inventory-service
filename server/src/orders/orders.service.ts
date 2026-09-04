@@ -11,16 +11,17 @@ export class OrdersService {
 
   createOrder(dto: CreateOrderDto): Order {
     for (const item of dto.items) {
-      const isReserved = this.inventoryService.reserve(
-        item.productId,
-        item.quantity,
-      );
-
-      if (!isReserved) {
+      if (
+        !this.inventoryService.checkAvailability(item.productId, item.quantity)
+      ) {
         throw new BadRequestException(
           `Product with ID ${item.productId} is out of stock or insufficient quantity.`,
         );
       }
+    }
+
+    for (const item of dto.items) {
+      this.inventoryService.reserve(item.productId, item.quantity);
     }
 
     const newOrder: Order = {
