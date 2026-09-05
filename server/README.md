@@ -1,91 +1,95 @@
 # ⚙️ Order & Inventory Service — Backend Core (NestJS)
 
-Цей каталог містить вихідний код основного мікросервісу на базі **NestJS 12**, **Prisma ORM 7** та **TypeScript (ESM)**.
+This directory contains the source code for the core microservice built with **NestJS 12**, **Prisma ORM 7**, and **TypeScript (native ESM)**.
 
 ---
 
-## 📂 Структура каталогів
+## 📂 Directory Structure
 
 ```
 server/
 ├── prisma/
-│   ├── migrations/             # Версіоновані SQL-міграції бази даних
-│   ├── schema.prisma           # Декларативна схема сутностей та реляцій
-│   └── seed.ts                 # Скрипт початкового наповнення (10 юзерів, 50 товарів)
-├── prisma7.config.ts           # Конфігурація Prisma 7 (Driver Adapters, шлях до .env)
+│   ├── migrations/             # Versioned SQL database migrations
+│   ├── schema.prisma           # Declarative Prisma schema & entities
+│   └── seed.ts                 # Database seeding script (10 users, 50 products)
+├── prisma7.config.ts           # Prisma 7 configuration (driver adapters, .env path)
 ├── src/
-│   ├── auth/                   # Авторизація за ролями (RBAC)
+│   ├── auth/                   # Role-Based Access Control (RBAC)
 │   │   ├── decorators/         # @Roles('ADMIN', 'CUSTOMER')
-│   │   └── guards/             # RolesGuard (перевірка заголовка x-user-role)
-│   ├── common/                 # Наскрізна функціональність
+│   │   └── guards/             # RolesGuard (inspects x-user-role header)
+│   ├── common/                 # Cross-cutting concerns
 │   │   ├── decorators/         # @CurrentUser('id')
 │   │   └── interceptors/       # LoggingInterceptor, TransformInterceptor
-│   ├── inventory/              # Модуль складу (InventoryModule, Service, Controller)
-│   ├── orders/                 # Модуль замовлень (OrdersModule, Service, Controller, DTO)
-│   ├── app.module.ts           # Кореневий модуль NestJS
-│   └── main.ts                 # Ініціалізація додатку, глобальні Pipes та Interceptors
-├── test/                       # Конфігурація та файли e2e тестів
+│   ├── inventory/              # Inventory module (InventoryModule, Service, Controller)
+│   ├── orders/                 # Orders module (OrdersModule, Service, Controller, DTOs)
+│   ├── app.module.ts           # Root NestJS module
+│   └── main.ts                 # Application entry point, global pipes & interceptors
+├── test/                       # E2E test configuration and test suites
 ├── package.json
 └── tsconfig.json
 ```
 
 ---
 
-## 🚀 Доступні npm-скрипти
+## 🚀 Available npm Scripts
 
-| Команда | Призначення |
+| Command | Description |
 | :--- | :--- |
-| `npm run start:dev` | Запуск сервера у режимі розробки з гарячим перезавантаженням (`--watch`). |
-| `npm run start` | Звичайний запуск компільованого NestJS додатку. |
-| `npm run build` | Компіляція TypeScript-проєкту в папку `dist/`. |
-| `npm run seed` | Запуск скрипта [prisma/seed.ts](prisma/seed.ts) через Prisma CLI (`prisma db seed`). |
-| `npm run lint` | Статичний аналіз коду за допомогою утиліти `oxlint`. |
-| `npm run format` | Автоматичне форматування коду за допомогою `prettier`. |
-| `npm run test` | Запуск юніт-тестів через `vitest`. |
-| `npm run test:watch`| Запуск тестів в інтерактивному watch-режимі. |
-| `npm run test:e2e` | Запуск наскрізних (end-to-end) тестів API. |
-| `npm run test:cov` | Генерація звіту про покриття коду тестами (Coverage). |
+| `npm run start:dev` | Starts the server in development mode with hot-reload (`--watch`). |
+| `npm run start` | Runs the compiled NestJS application in production mode. |
+| `npm run build` | Compiles the TypeScript project into the `dist/` folder. |
+| `npm run seed` | Runs the [prisma/seed.ts](prisma/seed.ts) script via Prisma CLI (`prisma db seed`). |
+| `npm run lint` | Performs static code analysis using the ultrafast `oxlint` linter. |
+| `npm run format` | Automatically formats code using `prettier`. |
+| `npm run test` | Runs unit tests using `vitest`. |
+| `npm run test:watch`| Runs tests in interactive watch mode. |
+| `npm run test:e2e` | Executes end-to-end (E2E) API test suites. |
+| `npm run test:cov` | Generates a test code coverage report. |
 
 ---
 
-## 🗄️ Робота з базою даних через Prisma 7 CLI
+## 🗄️ Database Management with Prisma 7 CLI
 
-У проєкті використовується оновлена архітектура **Prisma 7** без монолітного Rust-рушія з драйвером `@prisma/adapter-pg`.
+This project leverages the modern **Prisma 7** architecture (Rust-free, JavaScript runtime) paired with the `@prisma/adapter-pg` driver adapter.
 
-* **Застосування або генерація нових міграцій:**
+* **Apply or generate new migrations:**
   ```bash
   npx prisma migrate dev --name <migration_name>
   ```
-* **Перевірка статусу міграцій у базі даних:**
+* **Check migration status against the database:**
   ```bash
   npx prisma migrate status
   ```
-* **Генерація клієнта Prisma Client у `src/generated/prisma`:**
+* **Create an empty migration for custom native SQL (e.g., Partial Indexes):**
+  ```bash
+  npx prisma migrate dev --create-only --name <migration_name>
+  ```
+* **Generate Prisma Client to `src/generated/prisma`:**
   ```bash
   npx prisma generate
   ```
-  *(Виконується автоматично після `npm install` завдяки хуку `postinstall`).*
-* **Візуальний веб-інтерфейс бази даних (Prisma Studio):**
+  *(Runs automatically after `npm install` via the `postinstall` hook).*
+* **Visual database web client (Prisma Studio):**
   ```bash
   npx prisma studio
   ```
-  *Відкриває веб-адмінку на `http://localhost:5555`.*
+  *Opens visual database management UI at `http://localhost:5555`.*
 
 ---
 
-## 🛡️ Заголовки для тестування API в Postman / cURL
+## 🛡️ Headers for API Testing (Postman / cURL)
 
-Для тестування захищених ендпоінтів створення замовлень використовуйте наступні кастомні заголовки:
+When testing protected order creation endpoints, use the following custom headers:
 
-* **`x-user-role`**: Роль користувача (`ADMIN`, `CUSTOMER`, `MANAGER`).  
-  *Якщо заголовок відсутній або роль не відповідає `@Roles()`, повертається `403 Forbidden`.*
-* **`x-user-id`**: Ідентифікатор користувача (витягується в контролері через `@CurrentUser('id')`).
+* **`x-user-role`**: User role (`ADMIN`, `CUSTOMER`, `MANAGER`).  
+  *If the header is missing or does not match `@Roles()`, the request returns `403 Forbidden`.*
+* **`x-user-id`**: User ID (extracted in controllers via the `@CurrentUser('id')` decorator).
 
 ---
 
-## 🔄 Стандартизований формат відповіді API
+## 🔄 Standardized API Response Format
 
-Усі успішні HTTP-відповіді автоматично загортаються інтерцептором [TransformInterceptor](src/common/interceptors/transform.interceptor.ts) у формат:
+All successful HTTP responses are automatically wrapped by the [TransformInterceptor](src/common/interceptors/transform.interceptor.ts) into a consistent envelope:
 
 ```json
 {
@@ -95,4 +99,4 @@ server/
 }
 ```
 
-А час виконання запитів автоматично логується [LoggingInterceptor](src/common/interceptors/logging.interceptor.ts) у консоль сервера (`[POST] /orders - 8ms`).
+Request duration is automatically measured and logged to the server console by the [LoggingInterceptor](src/common/interceptors/logging.interceptor.ts) (e.g., `[POST] /orders - 8ms`).

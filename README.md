@@ -1,113 +1,115 @@
 # 🛒 Transactional Order & Inventory Service
 
-Навчальний мікросервісний проєкт e-commerce бекенду на базі **NestJS**, **Prisma ORM 7** та **PostgreSQL 17** у **Docker**.  
-Проєкт створено для вивчення повної картини сучасної розробки: від контейнеризації інфраструктури та чистої модульної архітектури до складного реляційного моделювання, міграцій, оптимізації SQL-запитів через індекси та транзакційної цілісності даних.
+Microservice e-commerce backend project built with **NestJS**, **Prisma ORM 7**, and **PostgreSQL 17** in **Docker**.  
+This project was created to explore modern software development practices: from infrastructure containerization and modular clean architecture to complex relational modeling, migrations, SQL query optimization with indexes, and transactional data integrity.
 
 ---
 
-## 🛠 Технологічний стек
+## 🛠 Technology Stack
 
-* **Runtime & Мова:** Node.js (v24+), TypeScript (ESM, `"type": "module"`)
-* **Бекенд-фреймворк:** [NestJS 12](https://nestjs.com/)
-* **База даних:** [PostgreSQL 17](https://www.postgresql.org/) (Alpine у Docker)
-* **ORM & Міграції:** [Prisma ORM 7](https://www.prisma.io/) (нова Rust-free архітектура, Driver Adapter `@prisma/adapter-pg`, пул з'єднань `pg`)
-* **Валідація та DTO:** `class-validator`, `class-transformer`
-* **Інфраструктура:** Docker, Docker Compose, pgAdmin 4
-* **Інструменти якості коду:** `oxlint` (надшвидкий лінтер), `vitest` (юніт та e2e тести), `prettier`
+* **Runtime & Language:** Node.js (v24+), TypeScript (ESM, `"type": "module"`)
+* **Backend Framework:** [NestJS 12](https://nestjs.com/)
+* **Database:** [PostgreSQL 17](https://www.postgresql.org/) (Alpine in Docker)
+* **ORM & Migrations:** [Prisma ORM 7](https://www.prisma.io/) (Rust-free architecture, `@prisma/adapter-pg` driver adapter, `pg` connection pool)
+* **Validation & DTO:** `class-validator`, `class-transformer`
+* **Infrastructure:** Docker, Docker Compose, pgAdmin 4
+* **Code Quality & Tooling:** `oxlint` (ultrafast linter), `vitest` (unit & e2e testing), `prettier`
 
 ---
 
-## 🏗 Структура проєкту
+## 🏗 Project Structure
 
 ```
 order-inventory-service/
-├── docs/                           # Навчальні завдання, підсумкові звіти та теорія
-│   ├── task.day_1.md               # День 1: Docker + NestJS Core + DI
-│   ├── summary.day_1.md            # Звіт та конспект за День 1
-│   ├── task.day_2.md               # День 2: Pipes, Guards, Interceptors, Decorators
-│   ├── summary.day_2.md            # Звіт та конспект за День 2
-│   ├── task.day_3.md               # День 3: Реляції 1:1, 1:N, N:M, Prisma 7, Seeding
-│   ├── summary.day_3.md            # Звіт та конспект за День 3
-│   └── task.day_4.md               # День 4: Індексація, EXPLAIN ANALYZE, оптимізація
-├── server/                         # Ядро бекенд-додатку (NestJS)
+├── docs/                           # Learning tasks, summary reports, and deep-dive documentation
+│   ├── task.day_1.md               # Day 1: Docker + NestJS Core + DI
+│   ├── summary.day_1.md            # Day 1 Summary & Guide
+│   ├── task.day_2.md               # Day 2: Pipes, Guards, Interceptors, Decorators
+│   ├── summary.day_2.md            # Day 2 Summary & Guide
+│   ├── task.day_3.md               # Day 3: Relations 1:1, 1:N, N:M, Prisma 7, Seeding
+│   ├── summary.day_3.md            # Day 3 Summary & Guide
+│   ├── task.day_4.md               # Day 4: SQL Indexing, EXPLAIN ANALYZE, Optimization
+│   └── summary.day_4.md            # Day 4 Summary & Guide
+├── server/                         # Backend Core Application (NestJS)
 │   ├── prisma/
-│   │   ├── migrations/             # SQL-файли міграцій бази даних
-│   │   ├── schema.prisma           # Декларативна схема моделей та зв'язків
-│   │   └── seed.ts                 # Скрипт наповнення (10 юзерів, 50 товарів, замовлення)
-│   ├── prisma7.config.ts           # Конфігурація Prisma 7 (шляхи, міграції, seed, DB URL)
+│   │   ├── migrations/             # Versioned SQL migration files
+│   │   ├── schema.prisma           # Declarative Prisma schema & models
+│   │   └── seed.ts                 # Database seeder (10 users, 50 products, orders)
+│   ├── prisma7.config.ts           # Prisma 7 configuration (driver adapters, paths, seed, DB URL)
 │   ├── src/
-│   │   ├── auth/                   # RBAC авторизація (RolesGuard, декоратор @Roles)
-│   │   ├── common/                 # Інтерцептори (Logging, Transform) та декоратор @CurrentUser
-│   │   ├── inventory/              # Модуль складу (товари, резервування, залишки)
-│   │   ├── orders/                 # Модуль замовлень (DTO, валідація, оформлення)
-│   │   ├── app.module.ts           # Головний модуль додатку
-│   │   └── main.ts                 # Точка входу, глобальні Pipes та Interceptors
+│   │   ├── auth/                   # Role-Based Access Control (RolesGuard, @Roles decorator)
+│   │   ├── common/                 # Interceptors (Logging, Transform) & @CurrentUser decorator
+│   │   ├── inventory/              # Inventory module (products, stock reservation)
+│   │   ├── orders/                 # Orders module (DTOs, validation, checkout)
+│   │   ├── app.module.ts           # Root application module
+│   │   └── main.ts                 # Application entry point, global pipes & interceptors
 │   └── package.json
-├── docker-compose.yml              # Контейнеризація PostgreSQL 17 та pgAdmin 4
-├── .env.example                    # Шаблон змінних оточення
+├── docker-compose.yml              # PostgreSQL 17 and pgAdmin 4 container orchestration
+├── .env.example                    # Environment variables template
 └── README.md
 ```
 
 ---
 
-## 🗺️ 5-денний план розвитку (Roadmap)
+## 🗺️ 5-Day Development Roadmap
 
-- [x] **День 1: Docker-середовище, Архітектура NestJS та Dependency Injection**
-  - [x] Розгортання `postgres_db` (порт 5433) та `pgadmin` (порт 8080) у `docker-compose.yml`.
-  - [x] Налаштування `healthcheck` (`pg_isready`) та кастомної bridge-мережі `order_network`.
-  - [x] Ініціалізація проєкту NestJS з підтримкою ESM.
-  - [x] Доменний модуль `InventoryModule` та експорт `InventoryService`.
-  - [x] Доменний модуль `OrdersModule` та впровадження залежностей через NestJS DI.
-  - [x] *Звіт:* [docs/summary.day_1.md](docs/summary.day_1.md).
+- [x] **Day 1: Docker Environment, NestJS Architecture, and Dependency Injection**
+  - [x] Provisioned `postgres_db` (port 5433) and `pgadmin` (port 8080) via `docker-compose.yml`.
+  - [x] Configured container `healthcheck` (`pg_isready`) and custom bridge network `order_network`.
+  - [x] Initialized NestJS project with native ESM support.
+  - [x] Implemented domain module `InventoryModule` and exported `InventoryService`.
+  - [x] Implemented domain module `OrdersModule` with cross-module Dependency Injection.
+  - [x] *Summary:* [docs/summary.day_1.md](docs/summary.day_1.md).
 
-- [x] **День 2: Pipes, Guards, Interceptors та кастомні декоратори**
-  - [x] Вхідні DTO (`CreateOrderDto`, `OrderItemDto`) з валідацією вкладених масивів (`class-validator`).
-  - [x] Підключення глобального `ValidationPipe` (`whitelist`, `forbidNonWhitelisted`, `transform`).
-  - [x] Рольова авторизація (RBAC) через `RolesGuard` та метадані декоратора `@Roles()`.
-  - [x] Аспектно-орієнтовані інтерцептори: `LoggingInterceptor` (вимірювання часу запиту) та `TransformInterceptor` (єдиний формат `{ success, data, timestamp }`).
-  - [x] Кастомний декоратор параметра контролера `@CurrentUser()`.
-  - [x] *Звіт:* [docs/summary.day_2.md](docs/summary.day_2.md).
+- [x] **Day 2: Pipes, Guards, Interceptors, and Custom Decorators**
+  - [x] Input DTOs (`CreateOrderDto`, `OrderItemDto`) with nested array validation (`class-validator`).
+  - [x] Configured global `ValidationPipe` (`whitelist`, `forbidNonWhitelisted`, `transform`).
+  - [x] Role-Based Access Control (RBAC) via `RolesGuard` and `@Roles()` decorator metadata.
+  - [x] Aspect-Oriented Interceptors: `LoggingInterceptor` (request execution time) and `TransformInterceptor` (standard `{ success, data, timestamp }` envelope).
+  - [x] Custom controller parameter decorator `@CurrentUser()`.
+  - [x] *Summary:* [docs/summary.day_2.md](docs/summary.day_2.md).
 
-- [x] **День 3: Реляційні бази даних, зв'язки (1:1, 1:N, N:M), Prisma 7 та Seeding**
-  - [x] Проєктування реляційної схеми в `schema.prisma`:
-    - `1:1`: `User` $\leftrightarrow$ `Profile` (із каскадним видаленням `onDelete: Cascade` та `@unique`).
-    - `1:N`: `User` $\leftrightarrow$ `Order` та `Order` $\leftrightarrow$ `OrderItem`.
-    - `N:M`: `Product` $\leftrightarrow$ `Category` (implicit Many-to-Many з автоматичною таблицею `_CategoryToProduct`).
-    - Модель `OrderItem` як явна Join-таблиця з фіксацією історичної ціни `unitPrice Decimal(10, 2)`.
-  - [x] Налаштування нової архітектури Prisma 7 з драйвер-адаптером `@prisma/adapter-pg` і конфігом `prisma7.config.ts`.
-  - [x] Генерація початкової SQL-міграції (`npx prisma migrate dev --name init`).
-  - [x] Скрипт `seed.ts` для наповнення бази: 6 категорій, 10 користувачів із профілями, 50 товарів, тестові замовлення.
-  - [x] Чистота репозиторію: налаштування `.gitignore` для згенерованого клієнта та хук `"postinstall": "prisma generate"`.
-  - [x] *Звіт:* [docs/summary.day_3.md](docs/summary.day_3.md).
+- [x] **Day 3: Relational Databases, Cardinality (1:1, 1:N, N:M), Prisma 7, and Seeding**
+  - [x] Relational modeling in `schema.prisma`:
+    - `1:1`: `User` $\leftrightarrow$ `Profile` (with `onDelete: Cascade` and `@unique`).
+    - `1:N`: `User` $\leftrightarrow$ `Order` and `Order` $\leftrightarrow$ `OrderItem`.
+    - `N:M`: `Product` $\leftrightarrow$ `Category` (implicit Many-to-Many via auto-generated `_CategoryToProduct`).
+    - `OrderItem` model as an explicit join entity freezing historical pricing: `unitPrice Decimal(10, 2)`.
+  - [x] Configured new Prisma 7 architecture with driver adapter `@prisma/adapter-pg` and `prisma7.config.ts`.
+  - [x] Generated initial SQL migration (`npx prisma migrate dev --name init`).
+  - [x] Implemented `seed.ts`: populated database with 6 categories, 10 users with profiles, 50 products, and orders.
+  - [x] Repository hygiene: configured `.gitignore` for generated client and `"postinstall": "prisma generate"` hook.
+  - [x] *Summary:* [docs/summary.day_3.md](docs/summary.day_3.md).
 
-- [ ] **День 4: Індексація в SQL, оптимізація запитів та EXPLAIN ANALYZE** *(У процесі)*
-  - [ ] Алгоритмічний розігрів: бінарний пошук та індексований кеш у пам'яті ($O(N)$ vs $O(\log N)$ vs $O(1)$).
-  - [ ] Масова генерація 200,000+ замовлень у PostgreSQL.
-  - [ ] Дослідження планів виконання через `EXPLAIN (ANALYZE, BUFFERS)`: різниця між `Seq Scan`, `Index Scan` та `Bitmap Index Scan`.
-  - [ ] Створення складених (Composite) індексів та перевірка правила лівого префікса (Leftmost Prefix Rule).
-  - [ ] Проєктування часткових індексів (Partial Index) для оптимізації черг замовлень (`WHERE status = 'PENDING'`).
-  - [ ] *Завдання:* [docs/task.day_4.md](docs/task.day_4.md).
+- [x] **Day 4: SQL Indexing, Query Optimization, and EXPLAIN ANALYZE**
+  - [x] Algorithmic warm-up: in-memory binary search and index lookup ($O(N)$ vs $O(\log K)$ vs $O(1)$).
+  - [x] Mass data generation: 200,000+ orders inserted into PostgreSQL.
+  - [x] Execution plan profiling with `EXPLAIN (ANALYZE, BUFFERS)`: comparing `Seq Scan`, `Index Scan`, and `Bitmap Index Scan`.
+  - [x] Designed composite B-Tree index `(status, createdAt)` and verified the Leftmost Prefix Rule.
+  - [x] Explored query planner selectivity and cost-based optimization (CBO Tipping Point).
+  - [x] Created partial index (`Partial Index` with `WHERE status = 'PENDING'`) via custom Prisma migration (`--create-only`), saving 83% disk space.
+  - [x] *Summary:* [docs/summary.day_4.md](docs/summary.day_4.md).
 
-- [ ] **День 5: Транзакційна надійність, рівні ізоляції (ACID) та інтеграція сервісів** *(Заплановано)*
-  - [ ] Підключення `PrismaService` до `InventoryService` та `OrdersService` (відмова від in-memory масивів).
-  - [ ] Атомарне списання залишків та створення замовлення через `prisma.$transaction`.
-  - [ ] Дослідження рівнів ізоляції транзакцій PostgreSQL (Read Committed, Repeatable Read, Serializable).
-  - [ ] Конкурентний доступ та блокування: оптимістичні (Optimistic) та песимістичні (Pessimistic) блокування (`SELECT FOR UPDATE`).
-  - [ ] Наскрізне тестування API (Postman / Vitest E2E) в умовах паралельних запитів (Race Conditions).
+- [ ] **Day 5: Transactional Integrity, Isolation Levels (ACID), and Service Integration** *(Planned)*
+  - [ ] Connect `PrismaService` to `InventoryService` and `OrdersService` (replacing in-memory storage).
+  - [ ] Atomic stock reservation and order creation wrapped inside `prisma.$transaction`.
+  - [ ] PostgreSQL transaction isolation levels (Read Committed, Repeatable Read, Serializable).
+  - [ ] Concurrency and locking: Optimistic vs Pessimistic locks (`SELECT FOR UPDATE`).
+  - [ ] End-to-end API testing (Postman / Vitest E2E) under concurrent load (Race Conditions).
 
 ---
 
-## 🚀 Швидкий старт (Getting Started)
+## 🚀 Getting Started
 
-### 1. Передумови
-* Встановлені **Node.js** (v20+ або v24+) та **Docker** з **Docker Compose**.
+### 1. Prerequisites
+* Installed **Node.js** (v20+ or v24+) and **Docker** with **Docker Compose**.
 
-### 2. Налаштування змінних оточення
-Створи файл `.env` у корені проєкту (якщо ще не створено):
+### 2. Environment Variables Configuration
+Create a `.env` file in the project root (if not already present):
 ```bash
 cp .env.example .env
 ```
-Переконайся, що в `.env` налаштовано рядок підключення до БД:
+Ensure `.env` contains valid database connection parameters:
 ```env
 PORT=3000
 POSTGRES_HOST=localhost
@@ -119,59 +121,59 @@ POSTGRES_DB=order_inventory_db
 DATABASE_URL="postgresql://postgres:123123@localhost:5433/order_inventory_db?schema=public"
 ```
 
-### 3. Запуск контейнерів бази даних
+### 3. Start Database Containers
 ```bash
 docker compose up -d
 ```
-* **PostgreSQL:** доступний на порту `localhost:5433`.
-* **pgAdmin 4:** доступний у браузері на `http://localhost:8080` (логін: `admin@admin.com`, пароль: `admin`).
+* **PostgreSQL:** available at `localhost:5433`.
+* **pgAdmin 4:** accessible in browser at `http://localhost:8080` (login: `admin@admin.com`, password: `admin`).
 
-### 4. Встановлення залежностей та генерація Prisma Client
-Перейди до папки бекенду:
+### 4. Install Dependencies & Generate Prisma Client
+Navigate to the `server/` directory:
 ```bash
 cd server
 npm install
 ```
-*(Завдяки хуку `postinstall`, Prisma Client згенерується автоматично).*
+*(The `postinstall` lifecycle hook will automatically generate the Prisma Client).*
 
-### 5. Накатка міграцій та наповнення тестовими даними
+### 5. Apply Migrations & Seed Database
 ```bash
-# Застосування міграцій до PostgreSQL
+# Apply migrations to PostgreSQL
 npx prisma migrate dev
 
-# Наповнення бази (6 категорій, 10 користувачів, 50 товарів, замовлення)
+# Seed database (6 categories, 10 users, 50 products, sample orders)
 npm run seed
 ```
 
-### 6. Запуск бекенд-сервера
+### 6. Run the Backend Server
 ```bash
 npm run start:dev
 ```
-Сервер запуститься на `http://localhost:3000`.
+The server will start at `http://localhost:3000`.
 
-### 7. Перегляд бази через Prisma Studio (Опціонально)
-Для зручного візуального перегляду всіх 50 товарів, зв'язків та замовлень у браузері:
+### 7. Explore Data with Prisma Studio (Optional)
+To visually inspect all products, categories, users, and orders in the browser:
 ```bash
 npx prisma studio
 ```
-Інтерфейс відкриється за адресою `http://localhost:5555`.
+The interface will open at `http://localhost:5555`.
 
 ---
 
-## 🧪 Тестування та перевірка якості коду
+## 🧪 Testing & Code Quality
 
-Усі команди виконуються всередині каталогу `server/`:
+All commands should be executed from within the `server/` directory:
 
 ```bash
-# Статичний аналіз коду (надшвидкий linter)
+# Static code analysis (ultrafast oxlint)
 npm run lint
 
-# Запуск юніт-тестів
+# Run unit tests
 npm run test
 
-# Запуск e2e тестів
+# Run end-to-end (E2E) tests
 npm run test:e2e
 
-# Перевірка тестового покриття
+# Generate test coverage report
 npm run test:cov
 ```
