@@ -1,134 +1,179 @@
-# Transactional Order & Inventory Service
+# 🛒 Transactional Order & Inventory Service
 
-An educational microservice project designed to explore and demonstrate transactional workflows, modular NestJS architecture, Dependency Injection (DI), and containerized database management.
-
----
-
-## 📌 Project Overview
-
-The **Order & Inventory Service** simulates a real-world e-commerce backend flow where orders depend on stock availability. The primary focus of this project is mastering:
-- **Clean Architecture & Modular Design** with NestJS.
-- **Dependency Injection (DI) & Inversion of Control (IoC)** across separate domain modules.
-- **Transactional State Management** and atomic stock reservation.
-- **Dockerized Infrastructure** using PostgreSQL and pgAdmin with healthchecks and isolated networks.
+Microservice e-commerce backend project built with **NestJS**, **Prisma ORM 7**, and **PostgreSQL 17** in **Docker**.  
+This project was created to explore modern software development practices: from infrastructure containerization and modular clean architecture to complex relational modeling, migrations, SQL query optimization with indexes, and transactional data integrity.
 
 ---
 
-## 🛠 Tech Stack
+## 🛠 Technology Stack
 
-- **Runtime & Language:** Node.js, TypeScript
-- **Backend Framework:** [NestJS](https://nestjs.com/)
-- **Database:** [PostgreSQL 17 / 16](https://www.postgresql.org/) (Alpine)
-- **Database Management:** [pgAdmin 4](https://www.pgadmin.org/)
-- **DevOps & Containerization:** Docker, Docker Compose
+* **Runtime & Language:** Node.js (v24+), TypeScript (ESM, `"type": "module"`)
+* **Backend Framework:** [NestJS 12](https://nestjs.com/)
+* **Database:** [PostgreSQL 17](https://www.postgresql.org/) (Alpine in Docker)
+* **ORM & Migrations:** [Prisma ORM 7](https://www.prisma.io/) (Rust-free architecture, `@prisma/adapter-pg` driver adapter, `pg` connection pool)
+* **Validation & DTO:** `class-validator`, `class-transformer`
+* **Infrastructure:** Docker, Docker Compose, pgAdmin 4
+* **Code Quality & Tooling:** `oxlint` (ultrafast linter), `vitest` (unit & e2e testing), `prettier`
 
 ---
 
-## 🏗 Architecture & Core Modules
-
-The application is structured into decoupled domain modules:
+## 🏗 Project Structure
 
 ```
 order-inventory-service/
-├── .agents/                # Agent configurations & guidelines
-├── docs/                   # Educational tasks & theoretical interview answers
-│   ├── task.md             # Project requirements & tasks
-│   └── interview_answers.md# Detailed answers for self-check & interview prep
-├── server/                 # NestJS application core (order-service)
+├── docs/                           # Learning tasks, summary reports, and deep-dive documentation
+│   ├── task.day_1.md               # Day 1: Docker + NestJS Core + DI
+│   ├── summary.day_1.md            # Day 1 Summary & Guide
+│   ├── task.day_2.md               # Day 2: Pipes, Guards, Interceptors, Decorators
+│   ├── summary.day_2.md            # Day 2 Summary & Guide
+│   ├── task.day_3.md               # Day 3: Relations 1:1, 1:N, N:M, Prisma 7, Seeding
+│   ├── summary.day_3.md            # Day 3 Summary & Guide
+│   ├── task.day_4.md               # Day 4: SQL Indexing, EXPLAIN ANALYZE, Optimization
+│   └── summary.day_4.md            # Day 4 Summary & Guide
+├── server/                         # Backend Core Application (NestJS)
+│   ├── prisma/
+│   │   ├── migrations/             # Versioned SQL migration files
+│   │   ├── schema.prisma           # Declarative Prisma schema & models
+│   │   └── seed.ts                 # Database seeder (10 users, 50 products, orders)
+│   ├── prisma7.config.ts           # Prisma 7 configuration (driver adapters, paths, seed, DB URL)
 │   ├── src/
-│   │   ├── inventory/      # Inventory module (stock management, reservation logic)
-│   │   ├── orders/         # Orders module (order creation, checkout orchestration)
-│   │   ├── app.module.ts   # Root application module
-│   │   └── main.ts         # Application entry point
-├── docker-compose.yml      # Containerized PostgreSQL & pgAdmin services
-├── .env.example            # Environment variable template
+│   │   ├── auth/                   # Role-Based Access Control (RolesGuard, @Roles decorator)
+│   │   ├── common/                 # Interceptors (Logging, Transform) & @CurrentUser decorator
+│   │   ├── inventory/              # Inventory module (products, stock reservation)
+│   │   ├── orders/                 # Orders module (DTOs, validation, checkout)
+│   │   ├── app.module.ts           # Root application module
+│   │   └── main.ts                 # Application entry point, global pipes & interceptors
+│   └── package.json
+├── docker-compose.yml              # PostgreSQL 17 and pgAdmin 4 container orchestration
+├── .env.example                    # Environment variables template
 └── README.md
 ```
 
-### Key Modules:
-- **`InventoryModule`**: Manages product items, stock availability checks (`checkAvailability`), and inventory reservation (`reserve`). Exports its service for external module consumption.
-- **`OrdersModule`**: Handles order lifecycle and orchestrates calls to `InventoryService` via NestJS Dependency Injection.
+---
+
+## 🗺️ 5-Day Development Roadmap
+
+- [x] **Day 1: Docker Environment, NestJS Architecture, and Dependency Injection**
+  - [x] Provisioned `postgres_db` (port 5433) and `pgadmin` (port 8080) via `docker-compose.yml`.
+  - [x] Configured container `healthcheck` (`pg_isready`) and custom bridge network `order_network`.
+  - [x] Initialized NestJS project with native ESM support.
+  - [x] Implemented domain module `InventoryModule` and exported `InventoryService`.
+  - [x] Implemented domain module `OrdersModule` with cross-module Dependency Injection.
+  - [x] *Summary:* [docs/summary.day_1.md](docs/summary.day_1.md).
+
+- [x] **Day 2: Pipes, Guards, Interceptors, and Custom Decorators**
+  - [x] Input DTOs (`CreateOrderDto`, `OrderItemDto`) with nested array validation (`class-validator`).
+  - [x] Configured global `ValidationPipe` (`whitelist`, `forbidNonWhitelisted`, `transform`).
+  - [x] Role-Based Access Control (RBAC) via `RolesGuard` and `@Roles()` decorator metadata.
+  - [x] Aspect-Oriented Interceptors: `LoggingInterceptor` (request execution time) and `TransformInterceptor` (standard `{ success, data, timestamp }` envelope).
+  - [x] Custom controller parameter decorator `@CurrentUser()`.
+  - [x] *Summary:* [docs/summary.day_2.md](docs/summary.day_2.md).
+
+- [x] **Day 3: Relational Databases, Cardinality (1:1, 1:N, N:M), Prisma 7, and Seeding**
+  - [x] Relational modeling in `schema.prisma`:
+    - `1:1`: `User` $\leftrightarrow$ `Profile` (with `onDelete: Cascade` and `@unique`).
+    - `1:N`: `User` $\leftrightarrow$ `Order` and `Order` $\leftrightarrow$ `OrderItem`.
+    - `N:M`: `Product` $\leftrightarrow$ `Category` (implicit Many-to-Many via auto-generated `_CategoryToProduct`).
+    - `OrderItem` model as an explicit join entity freezing historical pricing: `unitPrice Decimal(10, 2)`.
+  - [x] Configured new Prisma 7 architecture with driver adapter `@prisma/adapter-pg` and `prisma7.config.ts`.
+  - [x] Generated initial SQL migration (`npx prisma migrate dev --name init`).
+  - [x] Implemented `seed.ts`: populated database with 6 categories, 10 users with profiles, 50 products, and orders.
+  - [x] Repository hygiene: configured `.gitignore` for generated client and `"postinstall": "prisma generate"` hook.
+  - [x] *Summary:* [docs/summary.day_3.md](docs/summary.day_3.md).
+
+- [x] **Day 4: SQL Indexing, Query Optimization, and EXPLAIN ANALYZE**
+  - [x] Algorithmic warm-up: in-memory binary search and index lookup ($O(N)$ vs $O(\log K)$ vs $O(1)$).
+  - [x] Mass data generation: 200,000+ orders inserted into PostgreSQL.
+  - [x] Execution plan profiling with `EXPLAIN (ANALYZE, BUFFERS)`: comparing `Seq Scan`, `Index Scan`, and `Bitmap Index Scan`.
+  - [x] Designed composite B-Tree index `(status, createdAt)` and verified the Leftmost Prefix Rule.
+  - [x] Explored query planner selectivity and cost-based optimization (CBO Tipping Point).
+  - [x] Created partial index (`Partial Index` with `WHERE status = 'PENDING'`) via custom Prisma migration (`--create-only`), saving 83% disk space.
+  - [x] *Summary:* [docs/summary.day_4.md](docs/summary.day_4.md).
+
+- [ ] **Day 5: Transactional Integrity, Isolation Levels (ACID), and Service Integration** *(Planned)*
+  - [ ] Connect `PrismaService` to `InventoryService` and `OrdersService` (replacing in-memory storage).
+  - [ ] Atomic stock reservation and order creation wrapped inside `prisma.$transaction`.
+  - [ ] PostgreSQL transaction isolation levels (Read Committed, Repeatable Read, Serializable).
+  - [ ] Concurrency and locking: Optimistic vs Pessimistic locks (`SELECT FOR UPDATE`).
+  - [ ] End-to-end API testing (Postman / Vitest E2E) under concurrent load (Race Conditions).
 
 ---
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### 1. Prerequisites
+* Installed **Node.js** (v20+ or v24+) and **Docker** with **Docker Compose**.
 
-Ensure you have the following installed on your machine:
-- [Node.js](https://nodejs.org/) (v18+ or v20+ recommended)
-- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/) / [pnpm](https://pnpm.io/)
-- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
-
-### 1. Environment Setup
-
-Create a `.env` file based on the template:
-
+### 2. Environment Variables Configuration
+Create a `.env` file in the project root (if not already present):
 ```bash
 cp .env.example .env
 ```
-
-Configure your environment variables:
+Ensure `.env` contains valid database connection parameters:
 ```env
-# PostgreSQL Configuration
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=order_inventory_db
+PORT=3000
+POSTGRES_HOST=localhost
 POSTGRES_PORT=5433
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=123123
+POSTGRES_DB=order_inventory_db
 
-# pgAdmin Configuration
-PGADMIN_DEFAULT_EMAIL=admin@admin.com
-PGADMIN_DEFAULT_PASSWORD=admin
-PGADMIN_PORT=8080
+DATABASE_URL="postgresql://postgres:123123@localhost:5433/order_inventory_db?schema=public"
 ```
 
-### 2. Run Database Infrastructure
-
-Start PostgreSQL and pgAdmin using Docker Compose:
-
+### 3. Start Database Containers
 ```bash
 docker compose up -d
 ```
+* **PostgreSQL:** available at `localhost:5433`.
+* **pgAdmin 4:** accessible in browser at `http://localhost:8080` (login: `admin@admin.com`, password: `admin`).
 
-- **PostgreSQL**: Accessible on `localhost:5433` (or configured `POSTGRES_PORT`)
-- **pgAdmin**: Accessible on [http://localhost:8080](http://localhost:8080)
-
-### 3. Run the NestJS Application
-
-Navigate to the `server` directory, install dependencies, and run in development mode:
-
+### 4. Install Dependencies & Generate Prisma Client
+Navigate to the `server/` directory:
 ```bash
 cd server
 npm install
-npm run start:dev
+```
+*(The `postinstall` lifecycle hook will automatically generate the Prisma Client).*
+
+### 5. Apply Migrations & Seed Database
+```bash
+# Apply migrations to PostgreSQL
+npx prisma migrate dev
+
+# Seed database (6 categories, 10 users, 50 products, sample orders)
+npm run seed
 ```
 
-The API will be available at `http://localhost:3000`.
+### 6. Run the Backend Server
+```bash
+npm run start:dev
+```
+The server will start at `http://localhost:3000`.
+
+### 7. Explore Data with Prisma Studio (Optional)
+To visually inspect all products, categories, users, and orders in the browser:
+```bash
+npx prisma studio
+```
+The interface will open at `http://localhost:5555`.
 
 ---
 
-## 🗺 Implementation Roadmap
+## 🧪 Testing & Code Quality
 
-- [x] **Phase 1: Infrastructure**
-  - [x] Configure `docker-compose.yml` with `postgres_db` and `pgadmin` services.
-  - [x] Set up isolated Docker network (`order_network`) and persistence volumes.
-  - [x] Configure PostgreSQL healthcheck with `pg_isready`.
+All commands should be executed from within the `server/` directory:
 
-- [x] **Phase 2: NestJS Core & Dependency Injection**
-  - [x] Initialize `server` (order-service) project via `@nestjs/cli`.
-  - [x] Implement `InventoryModule` with in-memory stock availability & reservation.
-  - [x] Implement `OrdersModule` and inject `InventoryService` across modules.
+```bash
+# Static code analysis (ultrafast oxlint)
+npm run lint
 
-- [ ] **Phase 3: Persistence & Transactions (Upcoming)**
-  - [ ] Integrate TypeORM or Prisma ORM.
-  - [ ] Implement ACID database transactions for simultaneous order creation and stock deduction.
+# Run unit tests
+npm run test
 
----
+# Run end-to-end (E2E) tests
+npm run test:e2e
 
-## 📝 Learning Objectives & Self-Check
-
-As part of this educational project, review the detailed answers in [docs/interview_answers.md](docs/interview_answers.md):
-1. Differences between `Record<K, T>` and index signatures (`{[key: string]: T}`) in TypeScript.
-2. How TypeScript utility types (`Partial`, `Pick`, `Omit`, `Required`) operate under the hood with generics.
-3. How Inversion of Control (IoC) and Dependency Injection (DI) are resolved by the NestJS IoC container.
-4. Why Docker healthchecks (`healthcheck` + `condition: service_healthy`) are crucial for microservice startup order.
+# Generate test coverage report
+npm run test:cov
+```
