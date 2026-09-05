@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  profile   Profile?
+  orders     Order[]
+}
+
+model Profile {
+  id        String     @id @default(uuid())
+  phone     String?
+  city      String?
+  address   String?
+  avatar    String?
+  userId    String     @unique
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id String @id @default(uuid())
+  sku String @unique
+  title String
+  price Decimal @default(0)
+  stockQuantity Int @default(0)
+  categories Category[]
+  orderItems OrderItem[]
+}
+
+model Category {
+  id String @id @default(uuid())
+  name String
+  slug String @unique
+  products Product[]
+}
+
+model Order {
+  id String @id @default(uuid())
+  userId String
+  status String
+  totalAmount Decimal @default(0)
+  createdAt DateTime @default(now())
+  items OrderItem[]
+  user User @relation(fields: [userId], references: [id])
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+  orderId String
+  productId String
+  quantity Int @default(0)
+  unitPrice Decimal @default(0)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+}
