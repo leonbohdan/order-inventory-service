@@ -57,6 +57,7 @@ model Order {
   createdAt DateTime @default(now())
   items OrderItem[]
   user User @relation(fields: [userId], references: [id])
+  @@index([status, createdAt])
 }
 
 model OrderItem {
