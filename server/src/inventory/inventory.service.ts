@@ -1,37 +1,86 @@
-import { Injectable } from '@nestjs/common';
-import { Product } from './interfaces/product.interface.js';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { Product } from '../generated/prisma/client.js';
 
 @Injectable()
 export class InventoryService {
-  private products: Product[] = [
-    { id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', name: 'Laptop', quantity: 5, price: 1200 },
-    { id: 'b1eecf10-9d0c-4ef8-bb6d-6bb9bd380a12', name: 'Wireless Mouse', quantity: 15, price: 25 },
-    { id: 'c2eecf10-9d0c-4ef8-bb6d-6bb9bd380a13', name: 'Mechanical Keyboard', quantity: 2, price: 100 },
-  ];
+  constructor(private readonly prisma: PrismaService) {}
 
-  checkAvailability(productId: string, quantity: number): boolean {
-    if (quantity <= 0) return false;
+  async reserveStockPessimistic(
+    productId: string,
+    quantity: number,
+  ): Promise<Product> {
+    return this.prisma.$transaction(async (tx) => {
+      const [product] = await tx.$queryRaw<Product[]>`
+      SELECT * FROM "Product" WHERE id = ${productId} FOR UPDATE
+    `;
 
-    const product = this.products.find((p) => p.id === productId);
+      if (!product) {
+        throw new NotFoundException(`Product with ID ${productId} not found`);
+      }
 
-    if (!product) return false;
+      if (product.stockQuantity < quantity) {
+        throw new BadRequestException(
+          `Insufficient stock for product ${product.title}. Available: ${product.stockQuantity}, requested: ${quantity}`,
+        );
+      }
 
-    return product.quantity >= quantity;
+      const updatedProduct = await tx.product.update({
+        where: { id: productId },
+        data: {
+          stockQuantity: product.stockQuantity - quantity,
+        },
+      });
+
+      return updatedProduct;
+    });
   }
 
-  reserve(productId: string, quantity: number): boolean {
-    if (!this.checkAvailability(productId, quantity)) return false;
+  async reserveStockOptimistic(
+    productId: string,
+    quantity: number,
+  ): Promise<Product> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
 
-    const product = this.products.find((p) => p.id === productId);
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${productId} not found`);
+    }
+    if (product.stockQuantity < quantity) {
+      throw new BadRequestException(
+        `Insufficient stock for product ${product.title}. Available: ${product.stockQuantity}, requested: ${quantity}`,
+      );
+    }
 
-    if (!product) return false;
+    const result = await this.prisma.product.updateMany({
+      where: {
+        id: productId,
+        version: product.version,
+      },
+      data: {
+        stockQuantity: { decrement: quantity },
+        version: { increment: 1 },
+      },
+    });
 
-    product.quantity -= quantity;
+    if (result.count === 0) {
+      throw new ConflictException(
+        `Concurrent update conflict for product ${product.title}. Please try again.`,
+      );
+    }
 
-    return true;
+    return (await this.prisma.product.findUnique({
+      where: { id: productId },
+    }))!;
   }
 
-  getProducts(): Product[] {
-    return this.products;
+  async getProducts(): Promise<Product[]> {
+    return this.prisma.product.findMany();
   }
 }

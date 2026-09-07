@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InventoryService } from '../inventory/inventory.service.js';
 import { Order, ORDER_STATUS } from './interfaces/order.interface.js';
 import { CreateOrderDto } from './dto/create-order.dto.js';
@@ -9,19 +9,12 @@ export class OrdersService {
 
   constructor(private readonly inventoryService: InventoryService) {}
 
-  createOrder(dto: CreateOrderDto): Order {
+  async createOrder(dto: CreateOrderDto): Promise<Order> {
     for (const item of dto.items) {
-      if (
-        !this.inventoryService.checkAvailability(item.productId, item.quantity)
-      ) {
-        throw new BadRequestException(
-          `Product with ID ${item.productId} is out of stock or insufficient quantity.`,
-        );
-      }
-    }
-
-    for (const item of dto.items) {
-      this.inventoryService.reserve(item.productId, item.quantity);
+      await this.inventoryService.reserveStockPessimistic(
+        item.productId,
+        item.quantity,
+      );
     }
 
     const newOrder: Order = {

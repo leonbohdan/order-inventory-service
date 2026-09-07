@@ -21,9 +21,12 @@ server/
 │   │   ├── decorators/         # @CurrentUser('id')
 │   │   └── interceptors/       # LoggingInterceptor, TransformInterceptor
 │   ├── inventory/              # Inventory module (InventoryModule, Service, Controller)
+│   │   └── dto/                # ReserveStockDto (OpenAPI / validation annotations)
 │   ├── orders/                 # Orders module (OrdersModule, Service, Controller, DTOs)
+│   │   └── dto/                # CreateOrderDto, OrderItemDto
+│   ├── prisma/                 # Global PrismaModule & PrismaService (@prisma/adapter-pg)
 │   ├── app.module.ts           # Root NestJS module
-│   └── main.ts                 # Application entry point, global pipes & interceptors
+│   └── main.ts                 # Application entry point, Swagger init, pipes & interceptors
 ├── test/                       # E2E test configuration and test suites
 ├── package.json
 └── tsconfig.json
@@ -45,6 +48,31 @@ server/
 | `npm run test:watch`| Runs tests in interactive watch mode. |
 | `npm run test:e2e` | Executes end-to-end (E2E) API test suites. |
 | `npm run test:cov` | Generates a test code coverage report. |
+
+---
+
+## 📖 Interactive OpenAPI / Swagger Documentation
+
+When the application is running, the interactive documentation is available directly in your browser:
+* **Swagger UI:** [http://localhost:3000/api](http://localhost:3000/api)
+* **Raw OpenAPI JSON:** [http://localhost:3000/api-json](http://localhost:3000/api-json)
+
+Swagger UI provides full request schemas, field descriptions, headers, response codes (`200`, `201`, `400`, `403`, `404`, `409`), and in-browser request execution (*"Try it out"*).
+
+---
+
+## 🔒 Concurrency Control & Stock Reservation (Day 5)
+
+The service provides two distinct strategies to prevent Race Conditions (Lost Updates / Overbooking) when deducting warehouse stock:
+
+1. **Pessimistic Locking (`SELECT FOR UPDATE`):**
+   * **Endpoint:** `POST /inventory/reserve-pessimistic`
+   * **Payload:** `{"productId": "test-product-day5", "quantity": 2}`
+   * **Mechanism:** Rows are locked at the PostgreSQL level inside an interactive `prisma.$transaction`. Concurrent transactions are queued until the lock is released.
+2. **Optimistic Locking (`version` Compare-And-Swap):**
+   * **Endpoint:** `POST /inventory/reserve-optimistic`
+   * **Payload:** `{"productId": "test-product-day5", "quantity": 2}`
+   * **Mechanism:** Atomic conditional update (`UPDATE ... WHERE id = $id AND version = $version`). If a concurrent update modifies the version first, `updateMany` returns `count: 0`, throwing `409 ConflictException`.
 
 ---
 
