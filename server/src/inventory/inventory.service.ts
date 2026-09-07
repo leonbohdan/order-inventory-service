@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Product } from '../generated/prisma/client.js';
@@ -38,6 +39,45 @@ export class InventoryService {
 
       return updatedProduct;
     });
+  }
+
+  async reserveStockOptimistic(
+    productId: string,
+    quantity: number,
+  ): Promise<Product> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${productId} not found`);
+    }
+    if (product.stockQuantity < quantity) {
+      throw new BadRequestException(
+        `Insufficient stock for product ${product.title}. Available: ${product.stockQuantity}, requested: ${quantity}`,
+      );
+    }
+
+    const result = await this.prisma.product.updateMany({
+      where: {
+        id: productId,
+        version: product.version,
+      },
+      data: {
+        stockQuantity: { decrement: quantity },
+        version: { increment: 1 },
+      },
+    });
+
+    if (result.count === 0) {
+      throw new ConflictException(
+        `Concurrent update conflict for product ${product.title}. Please try again.`,
+      );
+    }
+
+    return (await this.prisma.product.findUnique({
+      where: { id: productId },
+    }))!;
   }
 
   async getProducts(): Promise<Product[]> {

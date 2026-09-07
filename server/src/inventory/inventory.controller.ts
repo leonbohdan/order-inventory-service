@@ -17,4 +17,12 @@ export class InventoryController {
       body.quantity,
     );
   }
+
+  @Post('reserve-optimistic')
+  reserveOptimistic(@Body() body: { productId: string; quantity: number }) {
+    return this.inventoryService.reserveStockOptimistic(
+      body.productId,
+      body.quantity,
+    );
+  }
 }

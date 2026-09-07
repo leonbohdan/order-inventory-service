@@ -1,0 +1,172 @@
+{
+  "info": {
+    "_postman_id": "b7c2d8a0-1234-4567-89ab-cdef01234567",
+    "name": "Order & Inventory Service API",
+    "description": "Complete collection of requests for testing Order & Inventory Service (Day 1 - Day 5), including concurrency controls (Pessimistic vs Optimistic Locking) and order management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "test-product-day5",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "1babcc42-f284-4278-9caf-0f7d7b442b12",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "📦 Inventory",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/inventory",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory"]
+            },
+            "description": "Fetches all products from the PostgreSQL database along with current stockQuantity and version."
+          },
+          "response": []
+        },
+        {
+          "name": "Reserve Stock (Pessimistic Locking)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/reserve-pessimistic",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "reserve-pessimistic"]
+            },
+            "description": "Deducts stock within an interactive SQL transaction using row-level locking: `SELECT ... FOR UPDATE`."
+          },
+          "response": []
+        },
+        {
+          "name": "Reserve Stock (Optimistic Locking)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/inventory/reserve-optimistic",
+              "host": ["{{baseUrl}}"],
+              "path": ["inventory", "reserve-optimistic"]
+            },
+            "description": "Deducts stock using version-based Compare-And-Swap. Returns 409 Conflict if another transaction updated the record concurrently."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🛒 Orders",
+      "item": [
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-user-role",
+                "value": "admin",
+                "description": "User role header (admin, customer, manager)"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{userId}}",
+                "description": "User UUID header"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            },
+            "description": "Retrieves all orders. Requires role authentication headers (e.g. x-user-role: admin)."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-user-role",
+                "value": "customer"
+              },
+              {
+                "key": "x-user-id",
+                "value": "{{userId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 1\n    }\n  ],\n  \"deliveryAddress\": \"123 Main Street, Suite 100\",\n  \"paymentMethod\": \"CARD\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            },
+            "description": "Creates an order and reserves required inventory items through InventoryService."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "⚙️ System",
+      "item": [
+        {
+          "name": "Healthcheck (Root)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [""]
+            },
+            "description": "Basic server healthcheck / greeting endpoint."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
