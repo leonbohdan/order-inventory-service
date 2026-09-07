@@ -11,6 +11,7 @@ This project was created to explore modern software development practices: from 
 * **Backend Framework:** [NestJS 12](https://nestjs.com/)
 * **Database:** [PostgreSQL 17](https://www.postgresql.org/) (Alpine in Docker)
 * **ORM & Migrations:** [Prisma ORM 7](https://www.prisma.io/) (Rust-free architecture, `@prisma/adapter-pg` driver adapter, `pg` connection pool)
+* **API Documentation & Testing:** [Swagger / OpenAPI](https://swagger.io/) (`@nestjs/swagger`, `swagger-ui-express`), Postman Collection v2.1.0
 * **Validation & DTO:** `class-validator`, `class-transformer`
 * **Infrastructure:** Docker, Docker Compose, pgAdmin 4
 * **Code Quality & Tooling:** `oxlint` (ultrafast linter), `vitest` (unit & e2e testing), `prettier`
@@ -29,7 +30,11 @@ order-inventory-service/
 │   ├── task.day_3.md               # Day 3: Relations 1:1, 1:N, N:M, Prisma 7, Seeding
 │   ├── summary.day_3.md            # Day 3 Summary & Guide
 │   ├── task.day_4.md               # Day 4: SQL Indexing, EXPLAIN ANALYZE, Optimization
-│   └── summary.day_4.md            # Day 4 Summary & Guide
+│   ├── summary.day_4.md            # Day 4 Summary & Guide
+│   ├── task.day_5.md               # Day 5: SQL Transactions, Isolation, Locking
+│   └── summary.day_5.md            # Day 5 Summary & Guide
+├── postman/                        # Exported Postman collections
+│   └── order-inventory-service.postman_collection.json # Ready-to-import API tests
 ├── server/                         # Backend Core Application (NestJS)
 │   ├── prisma/
 │   │   ├── migrations/             # Versioned SQL migration files
@@ -39,10 +44,15 @@ order-inventory-service/
 │   ├── src/
 │   │   ├── auth/                   # Role-Based Access Control (RolesGuard, @Roles decorator)
 │   │   ├── common/                 # Interceptors (Logging, Transform) & @CurrentUser decorator
-│   │   ├── inventory/              # Inventory module (products, stock reservation)
+│   │   ├── inventory/              # Inventory module (products, stock reservation DTOs)
+│   │   │   ├── dto/                # ReserveStockDto with Swagger annotations
+│   │   │   ├── inventory.controller.ts
+│   │   │   ├── inventory.module.ts
+│   │   │   └── inventory.service.ts
 │   │   ├── orders/                 # Orders module (DTOs, validation, checkout)
+│   │   ├── prisma/                 # Global PrismaModule & PrismaService
 │   │   ├── app.module.ts           # Root application module
-│   │   └── main.ts                 # Application entry point, global pipes & interceptors
+│   │   └── main.ts                 # Application entry point, Swagger init, pipes & interceptors
 │   └── package.json
 ├── docker-compose.yml              # PostgreSQL 17 and pgAdmin 4 container orchestration
 ├── .env.example                    # Environment variables template
@@ -90,12 +100,16 @@ order-inventory-service/
   - [x] Created partial index (`Partial Index` with `WHERE status = 'PENDING'`) via custom Prisma migration (`--create-only`), saving 83% disk space.
   - [x] *Summary:* [docs/summary.day_4.md](docs/summary.day_4.md).
 
-- [ ] **Day 5: Transactional Integrity, Isolation Levels (ACID), and Service Integration** *(Planned)*
-  - [ ] Connect `PrismaService` to `InventoryService` and `OrdersService` (replacing in-memory storage).
-  - [ ] Atomic stock reservation and order creation wrapped inside `prisma.$transaction`.
-  - [ ] PostgreSQL transaction isolation levels (Read Committed, Repeatable Read, Serializable).
-  - [ ] Concurrency and locking: Optimistic vs Pessimistic locks (`SELECT FOR UPDATE`).
-  - [ ] End-to-end API testing (Postman / Vitest E2E) under concurrent load (Race Conditions).
+- [x] **Day 5: SQL Transactions, Isolation Levels, Concurrency & Locking (Pessimistic vs Optimistic)**
+  - [x] Algorithmic warm-up: simulated in-memory asynchronous race conditions in Node.js Event Loop and implemented `Mutex`.
+  - [x] Practical experiments in PostgreSQL: reproduced `Lost Update` under `READ COMMITTED` and snapshot isolation failure (`40001 serialization_failure`) under `REPEATABLE READ`.
+  - [x] Integrated `@Global() PrismaModule` and `PrismaService` into NestJS with `@prisma/adapter-pg`.
+  - [x] Implemented Pessimistic Locking: `reserveStockPessimistic` using interactive `$transaction` and `SELECT ... FOR UPDATE`.
+  - [x] Implemented Optimistic Locking: added `version Int @default(1)` to `Product` model, generated migration, and implemented Compare-And-Swap (CAS) via `updateMany`.
+  - [x] Stress-tested under high concurrency (10 parallel requests): verified zero-loss inventory and automatic `409 Conflict` resolution.
+  - [x] Configured OpenAPI / Swagger documentation (`@nestjs/swagger`, `swagger-ui-express`) at `http://localhost:3000/api`.
+  - [x] Exported standardized Postman Collection v2.1.0 ([postman/order-inventory-service.postman_collection.json](postman/order-inventory-service.postman_collection.json)).
+  - [x] *Summary:* [docs/summary.day_5.md](docs/summary.day_5.md).
 
 ---
 
@@ -177,3 +191,28 @@ npm run test:e2e
 # Generate test coverage report
 npm run test:cov
 ```
+
+---
+
+## 📖 Interactive API Documentation (Swagger & Postman)
+
+### 1. Swagger UI (OpenAPI 3)
+Once the server is running (`npm run start:dev`), navigate to:
+👉 **`http://localhost:3000/api`**
+
+* Fully interactive documentation for all endpoints (`/inventory`, `/orders`, `/`).
+* Direct in-browser request execution ("Try it out").
+* Raw OpenAPI specification available at `http://localhost:3000/api-json`.
+
+### 2. Postman Collection
+A complete, pre-configured collection is available in the repository:
+📁 **[postman/order-inventory-service.postman_collection.json](postman/order-inventory-service.postman_collection.json)**
+
+* **How to import:** In Postman, click **Import** $\to$ drag and drop the `.json` file (or use **Link** $\to$ `http://localhost:3000/api-json`).
+* **Includes:**
+  - `GET /inventory` — List products with current `stockQuantity` and `version`.
+  - `POST /inventory/reserve-pessimistic` — Pessimistic locking test (`SELECT FOR UPDATE`).
+  - `POST /inventory/reserve-optimistic` — Optimistic locking test (`version CAS`).
+  - `GET /orders` — Protected orders list with `x-user-role: admin` header.
+  - `POST /orders` — Atomic order placement with stock reservation.
+
