@@ -1,37 +1,46 @@
-import { Injectable } from '@nestjs/common';
-import { Product } from './interfaces/product.interface.js';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { Product } from '../generated/prisma/client.js';
 
 @Injectable()
 export class InventoryService {
-  private products: Product[] = [
-    { id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', name: 'Laptop', quantity: 5, price: 1200 },
-    { id: 'b1eecf10-9d0c-4ef8-bb6d-6bb9bd380a12', name: 'Wireless Mouse', quantity: 15, price: 25 },
-    { id: 'c2eecf10-9d0c-4ef8-bb6d-6bb9bd380a13', name: 'Mechanical Keyboard', quantity: 2, price: 100 },
-  ];
+  constructor(private readonly prisma: PrismaService) {}
 
-  checkAvailability(productId: string, quantity: number): boolean {
-    if (quantity <= 0) return false;
+  async reserveStockPessimistic(
+    productId: string,
+    quantity: number,
+  ): Promise<Product> {
+    return this.prisma.$transaction(async (tx) => {
+      const [product] = await tx.$queryRaw<Product[]>`
+      SELECT * FROM "Product" WHERE id = ${productId} FOR UPDATE
+    `;
 
-    const product = this.products.find((p) => p.id === productId);
+      if (!product) {
+        throw new NotFoundException(`Product with ID ${productId} not found`);
+      }
 
-    if (!product) return false;
+      if (product.stockQuantity < quantity) {
+        throw new BadRequestException(
+          `Insufficient stock for product ${product.title}. Available: ${product.stockQuantity}, requested: ${quantity}`,
+        );
+      }
 
-    return product.quantity >= quantity;
+      const updatedProduct = await tx.product.update({
+        where: { id: productId },
+        data: {
+          stockQuantity: product.stockQuantity - quantity,
+        },
+      });
+
+      return updatedProduct;
+    });
   }
 
-  reserve(productId: string, quantity: number): boolean {
-    if (!this.checkAvailability(productId, quantity)) return false;
-
-    const product = this.products.find((p) => p.id === productId);
-
-    if (!product) return false;
-
-    product.quantity -= quantity;
-
-    return true;
-  }
-
-  getProducts(): Product[] {
-    return this.products;
+  async getProducts(): Promise<Product[]> {
+    return this.prisma.product.findMany();
   }
 }

@@ -3,6 +3,9 @@ import { AppModule } from './app.module.js';
 import { ValidationPipe } from '@nestjs/common';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor.js';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor.js';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '../.env' });
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
